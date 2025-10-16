@@ -1,0 +1,4 @@
+# Mini base DNS
+www.uvsq.fr 193.51.31.90
+ecampus.uvsq.fr 193.51.25.12
+poste.uvsq.fr 193.51.31.154
