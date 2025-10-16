@@ -55,5 +55,23 @@ public class DnsTest {
         parAdresse.forEach(System.out::println);
     }
 
+    @Test
+    public void testAddItem() {
+        // Copie temporaire du fichier original
+        Path fichier = Path.of("src/main/resources/data/dns.txt");
+        Dns dns = new Dns(fichier);
+
+        NomMachine nouveauNom = new NomMachine("test.uvsq.fr");
+        AdresseIP nouvelleIp = new AdresseIP("193.51.31.200");
+
+        dns.addItem(nouvelleIp, nouveauNom);
+
+        // Vérifie que la nouvelle entrée est bien ajoutée
+        DnsItem item = dns.getItem(nouveauNom);
+        assertNotNull(item);
+        assertEquals("193.51.31.200", item.ip().value());
+    }
+
+
 
 }

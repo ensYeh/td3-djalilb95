@@ -171,7 +171,55 @@ public class Dns {
    *
    * @return chemin du fichier de base
    */
-  public Path getDbPath() {
+  
+  /**
+     * Ajoute une nouvelle entrée (nom, IP) à la base DNS et sauvegarde la base.
+     *
+     * @param ip  l'adresse IP à ajouter
+     * @param nom le nom de machine à ajouter
+     * @throws RuntimeException si le nom ou l'IP existe déjà, ou en cas d'erreur d'écriture
+     */
+    public void addItem(final AdresseIP ip, final NomMachine nom) {
+        if (ip == null || nom == null) {
+            throw new IllegalArgumentException("Nom ou IP nul");
+        }
+
+        // Vérifie l’unicité
+        if (byName.containsKey(nom.value())) {
+            throw new RuntimeException("ERREUR : Le nom de machine existe déjà !");
+        }
+        if (byIp.containsKey(ip.value())) {
+            throw new RuntimeException("ERREUR : L'adresse IP existe déjà !");
+        }
+
+        // Ajout en mémoire
+        DnsItem item = new DnsItem(nom, ip);
+        byName.put(nom.value(), item);
+        byIp.put(ip.value(), item);
+
+        // Sauvegarde de la base
+        save();
+    }
+
+    /**
+     * Sauvegarde toutes les entrées de la base DNS dans le fichier texte.
+     */
+    private void save() {
+        try {
+            List<String> lignes = byName.values().stream()
+                .sorted(Comparator.comparing(d -> d.nom().value()))
+                .map(DnsItem::toString)
+                .collect(Collectors.toList());
+
+            Files.createDirectories(dbPath.getParent());
+            Files.write(dbPath, lignes);
+        } catch (IOException e) {
+            throw new RuntimeException("Erreur lors de la sauvegarde du fichier " + dbPath, e);
+        }
+    }
+
+  
+   public Path getDbPath() {
     return dbPath;
   }
 }
