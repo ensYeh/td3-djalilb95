@@ -6,6 +6,11 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
+
 
 
 public class Dns {
@@ -100,6 +105,37 @@ public class Dns {
     }
     return byIp.get(ip.value());
   }
+
+  /**
+    * Retourne la liste des entrées DNS appartenant à un domaine donné.
+    *
+    * @param domaine          le domaine recherché (ex: "uvsq.fr")
+    * @param trierParAdresse  true pour trier par IP, false pour trier par nom
+    * @return liste triée des entrées correspondant au domaine
+    */
+    public List<DnsItem> getItems(final String domaine, final boolean trierParAdresse) {
+        if (domaine == null || domaine.isBlank()) {
+            throw new IllegalArgumentException("Domaine vide ou nul");
+        }
+
+        // Normalise le domaine (en minuscules)
+        final String domaineLower = domaine.toLowerCase(Locale.ROOT).trim();
+
+        // Filtrage des entrées correspondant au domaine
+        List<DnsItem> resultat = byName.values().stream()
+            .filter(item -> item.nom().domaine().equals(domaineLower))
+            .collect(Collectors.toCollection(ArrayList::new));
+
+        // Tri en fonction du paramètre
+        if (trierParAdresse) {
+            resultat.sort(Comparator.comparing(i -> i.ip().value()));
+        } else {
+            resultat.sort(Comparator.comparing(i -> i.nom().value()));
+        }
+
+        return resultat;
+    }
+
 
   /**
    * Retourne le nombre total d’entrées chargées.

@@ -3,9 +3,11 @@ package fr.uvsq.cprog.collex;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
 import java.nio.file.Path;
+import java.util.List;
 
 public class DnsTest {
 
@@ -32,5 +34,26 @@ public class DnsTest {
         assertEquals("www.uvsq.fr", item1.nom().value());
         assertEquals("193.51.31.90", item1.ip().value());
     }
+
+    @Test
+    public void testGetItemsParDomaine() {
+        Dns dns = new Dns(Path.of("src/main/resources/data/dns.txt"));
+
+        // Domaine à tester
+        String domaine = "uvsq.fr";
+
+        // Liste triée par nom
+        List<DnsItem> parNom = dns.getItems(domaine, false);
+        assertFalse(parNom.isEmpty());
+        System.out.println("---- Tri par nom ----");
+        parNom.forEach(System.out::println);
+
+        // Liste triée par adresse
+        List<DnsItem> parAdresse = dns.getItems(domaine, true);
+        assertFalse(parAdresse.isEmpty());
+        System.out.println("---- Tri par adresse ----");
+        parAdresse.forEach(System.out::println);
+    }
+
 
 }
