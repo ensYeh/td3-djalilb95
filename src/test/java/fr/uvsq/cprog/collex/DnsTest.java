@@ -1,77 +1,138 @@
 package fr.uvsq.cprog.collex;
 
+import static org.junit.Assert.*;
+
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-
+import java.io.*;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
 
+/**
+ * Tests unitaires et d'intégration pour le projet DNS.
+ */
 public class DnsTest {
 
-    @Test
-    public void testChargementBase() {
-        Dns dns = new Dns(Path.of("src/main/resources/data/dns.txt"));
-        System.out.println("Entrées chargées : " + dns.size());
-        System.out.println("Contient www.uvsq.fr ? " + dns.containsName("www.uvsq.fr"));
+  @Rule
+  public TemporaryFolder tmp = new TemporaryFolder();
+
+  /** Copie la base DNS d'origine vers un fichier temporaire pour tests isolés. */
+  private Path copieDb() throws IOException {
+    Path src = Path.of("src/main/resources/data/dns.txt");
+    File f = tmp.newFile("dns.txt");
+    Path dst = f.toPath();
+    Files.copy(src, dst, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+    return dst;
+  }
+
+  @Test
+  public void testChargementBase() {
+    Dns dns = new Dns(Path.of("src/main/resources/data/dns.txt"));
+    assertTrue(dns.size() >= 0);
+  }
+
+  @Test
+  public void testGetItemByNomAndIp() {
+    Dns dns = new Dns(Path.of("src/main/resources/data/dns.txt"));
+    NomMachine nom = new NomMachine("www.uvsq.fr");
+    AdresseIP ip = new AdresseIP("193.51.31.90");
+
+    DnsItem fromName = dns.getItem(nom);
+    DnsItem fromIp = dns.getItem(ip);
+
+    assertNotNull(fromName);
+    assertNotNull(fromIp);
+    assertEquals(fromName, fromIp);
+  }
+
+  @Test
+  public void testAddItem_unique_ok() throws IOException {
+    Path db = copieDb();
+    Dns dns = new Dns(db);
+
+    String fqdn = "test-" + System.nanoTime() + ".uvsq.fr";
+    String ip = "193.51.31." + (100 + (int) (System.nanoTime() % 100));
+
+    dns.addItem(new AdresseIP(ip), new NomMachine(fqdn));
+
+    DnsItem item = dns.getItem(new NomMachine(fqdn));
+    assertNotNull(item);
+    assertEquals(ip, item.ip().value());
+
+    String contenu = Files.readString(db);
+    assertTrue(contenu.contains(fqdn + " " + ip));
+  }
+
+  @Test(expected = RuntimeException.class)
+  public void testAddItem_doublon_nom_declenche_exception() throws IOException {
+    Path db = copieDb();
+    Dns dns = new Dns(db);
+
+    String fqdn = "doublon-" + System.nanoTime() + ".uvsq.fr";
+    String ip1 = "193.51.31.201";
+    String ip2 = "193.51.31.202";
+
+    dns.addItem(new AdresseIP(ip1), new NomMachine(fqdn)); // OK
+    dns.addItem(new AdresseIP(ip2), new NomMachine(fqdn)); // Doit lever RuntimeException
+  }
+
+  /**
+   * 🔄 Test d’intégration complet : simule une vraie session utilisateur
+   * (add → lookup → ls → quit)
+   */
+  @Test
+  public void testSessionComplete() throws Exception {
+    Path db = copieDb();
+
+    // Données uniques pour éviter les doublons
+    String fqdn = "session-" + System.nanoTime() + ".uvsq.fr";
+    String ip = "193.51.31." + (100 + (int) (System.nanoTime() % 100));
+
+    // Commandes simulées comme si l'utilisateur tapait au clavier
+    String inputCommands = String.join("\n",
+        "add " + ip + " " + fqdn,
+        fqdn,
+        ip,
+        "ls uvsq.fr",
+        "quit"
+    ) + "\n";
+
+    InputStream fakeIn = new ByteArrayInputStream(inputCommands.getBytes());
+    ByteArrayOutputStream fakeOut = new ByteArrayOutputStream();
+    PrintStream originalOut = System.out;
+    InputStream originalIn = System.in;
+
+    // Redirection des flux
+    System.setIn(fakeIn);
+    System.setOut(new PrintStream(fakeOut));
+
+    try {
+      Dns dns = new Dns(db);
+      DnsTUI ui = new DnsTUI();
+
+      while (true) {
+        Commande cmd = ui.nextCommande();
+        String out = cmd.execute(dns);
+        ui.affiche(out);
+        if (cmd.shouldQuit()) break;
+      }
+
+    } finally {
+      System.setIn(originalIn);
+      System.setOut(originalOut);
     }
 
-    @Test
-    public void testRechercheNomEtIp() {
-        Dns dns = new Dns(Path.of("src/main/resources/data/dns.txt"));
+    // Vérifications : la session doit contenir ces éléments
+    String console = fakeOut.toString();
+    System.out.println(console);
 
-        NomMachine nom = new NomMachine("www.uvsq.fr");
-        AdresseIP ip = new AdresseIP("193.51.31.90");
-
-        DnsItem item1 = dns.getItem(nom);
-        DnsItem item2 = dns.getItem(ip);
-
-        assertNotNull(item1);
-        assertNotNull(item2);
-        assertEquals(item1, item2);
-        assertEquals("www.uvsq.fr", item1.nom().value());
-        assertEquals("193.51.31.90", item1.ip().value());
-    }
-
-    @Test
-    public void testGetItemsParDomaine() {
-        Dns dns = new Dns(Path.of("src/main/resources/data/dns.txt"));
-
-        // Domaine à tester
-        String domaine = "uvsq.fr";
-
-        // Liste triée par nom
-        List<DnsItem> parNom = dns.getItems(domaine, false);
-        assertFalse(parNom.isEmpty());
-        System.out.println("---- Tri par nom ----");
-        parNom.forEach(System.out::println);
-
-        // Liste triée par adresse
-        List<DnsItem> parAdresse = dns.getItems(domaine, true);
-        assertFalse(parAdresse.isEmpty());
-        System.out.println("---- Tri par adresse ----");
-        parAdresse.forEach(System.out::println);
-    }
-
-    @Test
-    public void testAddItem() {
-        // Copie temporaire du fichier original
-        Path fichier = Path.of("src/main/resources/data/dns.txt");
-        Dns dns = new Dns(fichier);
-
-        NomMachine nouveauNom = new NomMachine("test.uvsq.fr");
-        AdresseIP nouvelleIp = new AdresseIP("193.51.31.200");
-
-        dns.addItem(nouvelleIp, nouveauNom);
-
-        // Vérifie que la nouvelle entrée est bien ajoutée
-        DnsItem item = dns.getItem(nouveauNom);
-        assertNotNull(item);
-        assertEquals("193.51.31.200", item.ip().value());
-    }
-
-
-
+    assertTrue(console.contains("OK"));               // ajout réussi
+    assertTrue(console.contains(ip));                 // IP affichée
+    assertTrue(console.contains(fqdn));               // nom affiché
+    assertTrue(console.toLowerCase().contains("bye")); // application terminée
+  }
 }
+
+

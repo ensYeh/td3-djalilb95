@@ -109,7 +109,7 @@ public class DnsTUI {
         }
       };
     }
-
+    
     // Requêtes directes : un seul token -> soit IP soit FQDN
     if (t.length == 1) {
       final String token = t[0];
