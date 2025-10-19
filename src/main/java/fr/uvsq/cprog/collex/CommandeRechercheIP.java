@@ -1,6 +1,6 @@
 package fr.uvsq.cprog.collex;
 
-/** Commande : rechercher l'adresse IP d'une machine donnée. */
+/** Commande : rechercher l'adresse IP d'une machine donnée */
 public class CommandeRechercheIP implements Commande {
 
   private final NomMachine nom;

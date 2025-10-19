@@ -16,14 +16,14 @@ public class DnsApp {
 
   /** Lance la boucle applicative. */
   public void run() {
-    //  Charger la config (facultatif : src/main/resources/config.properties)
+    
     Properties props = loadProperties();
 
-    //  Résoudre le chemin de la base (par défaut vers src/main/resources/data/dns.txt)
+    
     String dbPathStr = props.getProperty("db.path", "src/main/resources/data/dns.txt");
     Path dbPath = Path.of(dbPathStr);
 
-    // Créer le service et l'IHM
+    
     Dns dns = new Dns(dbPath);
     DnsTUI ui = new DnsTUI();
 

@@ -3,7 +3,7 @@ package fr.uvsq.cprog.collex;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/** Commande : liste les machines appartenant à un domaine donné. */
+/** Commande : liste les machines appartenant à un domaine donné */
 public class CommandeListeDomaine implements Commande {
 
   private final String domaine;

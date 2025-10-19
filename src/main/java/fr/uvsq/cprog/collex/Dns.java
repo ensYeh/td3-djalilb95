@@ -32,7 +32,7 @@ public class Dns {
    */
   public Dns(final Path dbPath) {
     this.dbPath = dbPath;
-    load(); // charge immédiatement la base de données
+    load(); 
   }
 
   
@@ -197,7 +197,7 @@ public class Dns {
         byName.put(nom.value(), item);
         byIp.put(ip.value(), item);
 
-        // Sauvegarde de la base
+        
         save();
     }
 

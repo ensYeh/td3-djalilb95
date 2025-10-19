@@ -46,7 +46,7 @@ public class DnsTUI {
       return new Commande() {
         @Override
         public String execute(final Dns dns) {
-          return "Bye.";
+          return "Fermeture de l'application dns.";
         }
         @Override
         public boolean shouldQuit() {
@@ -55,7 +55,7 @@ public class DnsTUI {
       };
     }
 
-    // Découpage générique
+    
     final String[] t = line.split("\\s+");
 
     // ls [-a] domaine
@@ -110,17 +110,17 @@ public class DnsTUI {
       };
     }
     
-    // Requêtes directes : un seul token -> soit IP soit FQDN
+    
     if (t.length == 1) {
       final String token = t[0];
       if (IPV4.matcher(token).matches()) {
-        // on a une IP -> retourner le nom qualifié
+        
         return dns -> {
           final DnsItem it = dns.getItem(new AdresseIP(token));
           return (it == null) ? "ERREUR : IP inconnue" : it.nom().value();
         };
       } else {
-        // on a un FQDN -> retourner l'IP
+        
         return dns -> {
           final DnsItem it = dns.getItem(new NomMachine(token));
           return (it == null) ? "ERREUR : Nom inconnu" : it.ip().value();
@@ -128,7 +128,7 @@ public class DnsTUI {
       }
     }
 
-    // Par défaut : commande inconnue
+    
     return msg("Commande inconnue");
   }
 

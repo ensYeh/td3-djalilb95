@@ -1,6 +1,6 @@
 package fr.uvsq.cprog.collex;
 
-/** Commande : ajoute un nouvel item dans la base DNS. */
+/** Commande : ajoute un nouvel item dans la base DNS */
 public class CommandeAjout implements Commande {
 
   private final AdresseIP ip;

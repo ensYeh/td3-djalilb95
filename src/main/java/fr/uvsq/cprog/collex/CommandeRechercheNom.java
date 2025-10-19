@@ -1,6 +1,6 @@
 package fr.uvsq.cprog.collex;
 
-/** Commande : rechercher le nom de machine associé à une adresse IP. */
+/** Commande : rechercher le nom de machine associé à une adresse IP */
 public class CommandeRechercheNom implements Commande {
 
   private final AdresseIP ip;
