@@ -1,5 +1,6 @@
 amazon.france.com 193.52.25.31
 ecampus.uvsq.fr 193.51.25.12
+france.telecom.com 193.51.31.92
 poste.uvsq.fr 193.51.31.154
 test.uvsq.fr 193.51.31.200
 www.uvsq.fr 193.51.31.90
